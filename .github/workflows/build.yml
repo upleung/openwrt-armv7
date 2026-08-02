@@ -27,8 +27,8 @@ jobs:
     - name: 下载并解压 OpenWrt Image Builder (24.10.0)
       run: |
         VERSION="24.10.0"
-        TARGET="armvirt"
-        SUBTARGET="32"
+        TARGET="armsr"
+        SUBTARGET="armv7"
         # 【注意】这里文件名中间不要有空格
         URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}/openwrt-imagebuilder-${VERSION}-${TARGET}-${SUBTARGET}.Linux-x86_64.tar.xz"
         
