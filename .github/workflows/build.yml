@@ -46,9 +46,9 @@ jobs:
         cd openwrt
         # 配置 ARMv7 容器目标，并显式加入 LuCI 界面与中文包
         cat >> .config <<EOF
-        CONFIG_TARGET_armvirt=y
-        CONFIG_TARGET_armvirt_32=y
-        CONFIG_TARGET_armvirt_32_Default=y
+        CONFIG_TARGET_armsr=y
+        CONFIG_TARGET_armsr_armv7=y
+        CONFIG_TARGET_armsr_armv7_Default=y
         CONFIG_TARGET_ROOTFS_TARGZ=y
         CONFIG_TARGET_ROOTFS_EXT4FS=n
         CONFIG_TARGET_ROOTFS_SQUASHFS=n
@@ -69,8 +69,8 @@ jobs:
 
     - name: 准备 Docker 镜像上下文
       run: |
-        cd openwrt/bin/targets/armvirt/32
-        tarball=$(ls openwrt-armvirt-32-default-rootfs.tar.gz | head -n 1)
+        cd openwrt/bin/targets/armsr/armv7
+        tarball=$(ls *rootfs*.tar.gz | head -n 1)
         cp $tarball ../../../../../rootfs.tar.gz
         cd ../../../../../
         cat >> Dockerfile <<EOF
