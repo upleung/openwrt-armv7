@@ -5,7 +5,7 @@ on:
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: openwrt-22.03.7 # 指定22.03.7稳定版
+  REPO_BRANCH: v22.03.7 # 指定22.03.7稳定版
 
 jobs:
   build:
@@ -70,7 +70,8 @@ jobs:
     - name: 准备 Docker 镜像上下文
       run: |
         cd openwrt/bin/targets/armvirt/32
-        tarball=$(ls openwrt-armvirt-32-default-rootfs.tar.gz | head -n 1)
+        # 使用通配符匹配，忽略前方硬编码的版本号差异
+        tarball=$(ls *armvirt-32-default-rootfs.tar.gz | head -n 1)
         cp $tarball ../../../../../rootfs.tar.gz
         cd ../../../../../
         cat >> Dockerfile <<EOF
