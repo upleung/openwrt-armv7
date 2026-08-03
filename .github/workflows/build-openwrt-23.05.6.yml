@@ -1,11 +1,11 @@
-name: Build OpenWrt ARMv7 with LuCI 24.10.0
+name: Build OpenWrt ARMv7 with LuCI 23.05.6
 
 on:
   workflow_dispatch: # 仅保留手动触发
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: v24.10.0 # 指定24.10稳定版
+  REPO_BRANCH: v23.05.6 # 指定23.05.6稳定版
 
 jobs:
   build:
@@ -110,11 +110,11 @@ jobs:
         # 【修改】在这里加入两行 tag，分别对应 Docker Hub 和 GHCR
         # 注意：此处假定 github.repository_owner 是全小写字母
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7-24.10.0:latest
-          ghcr.io/${{ github.repository_owner }}/openwrt-armv7-24.10.0:latest
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7-23.05.6:latest
+          ghcr.io/${{ github.repository_owner }}/openwrt-armv7-23.05.6:latest
 
     - name: 上传 Rootfs 供原生 Linux 使用
       uses: actions/upload-artifact@v4
       with:
-        name: openwrt-armv7-luci-rootfs-24.10.0
+        name: openwrt-armv7-luci-rootfs-23.05.6
         path: rootfs.tar.gz
