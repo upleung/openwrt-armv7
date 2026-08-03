@@ -1,4 +1,4 @@
-name: Build OpenWrt ARMv7 with LuCI 23.05.6
+name: Build OpenWrt ARMv7 with LuCI
 
 on:
   workflow_dispatch: # 仅保留手动触发
