@@ -37,6 +37,15 @@ docker network create -d macvlan \
 ### Docker run
 
 ```bash
+docker network create -d macvlan \
+  --subnet=192.168.1.0/24 \
+  --gateway=192.168.1.1 \
+  -o parent=eth0 openwrt_macvlan
+```
+
+### Docker run
+
+```bash
 docker run -d \
   --name openwrt \
   --restart always \
@@ -45,7 +54,7 @@ docker run -d \
   -v /lib/modules:/lib/modules:ro \
   -v /etc/localtime:/etc/localtime:ro \
   -v openwrt_overlay:/overlay \
-  mcgtekwrt/openwrt-armv7:v25.12.5
+  mcgtekwrt/openwrt-armv7:latest
 ```
 
 ---
@@ -57,7 +66,7 @@ version: '3.8'
 
 services:
   openwrt:
-    image: mcgtekwrt/openwrt-armv7:v25.12.5
+    image: mcgtekwrt/openwrt-armv7:latest
     container_name: openwrt
     restart: always
     privileged: true
