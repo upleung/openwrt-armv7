@@ -34,8 +34,8 @@ jobs:
     - name: 下载官方 OpenWrt ARMv7 Rootfs + 校验
       run: |
         set -euxo pipefail
-        
-        BASE_URL="[https://downloads.openwrt.org/releases/$](https://downloads.openwrt.org/releases/$){VERSION}/targets/${TARGET}/${SUBTARGET}"
+
+        BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"   
         echo "BASE_URL=$BASE_URL"
         
         # 自动发现最新 rootfs.tar.gz 文件名
