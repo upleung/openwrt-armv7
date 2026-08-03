@@ -48,12 +48,12 @@ jobs:
     - name: 生成 Dockerfile（原生 OpenWrt Rootfs）
       run: |
         cat > Dockerfile <<'EOF'
-FROM scratch
-ADD rootfs.tar.gz /
-EXPOSE 22 80 443
-USER root
-CMD ["/sbin/init"]
-EOF
+        FROM scratch
+        ADD rootfs.tar.gz /
+        EXPOSE 22 80 443
+        USER root
+        CMD ["/sbin/init"]
+        EOF
 
     - name: 配置 QEMU 跨平台构建支持
       uses: docker/setup-qemu-action@v3
