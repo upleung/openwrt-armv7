@@ -33,24 +33,21 @@ jobs:
 
     - name: 下载官方 OpenWrt ARMv7 Rootfs + 校验
       run: |
-        set -euxo pipefail
-
-        BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"   
-        echo "BASE_URL=$BASE_URL"
-        
-        # 自动发现最新 rootfs.tar.gz 文件名
-        ROOTFS_FILE=$(wget -qO- "${BASE_URL}/" | grep -oE 'openwrt-.*rootfs\.tar\.gz' | head -n1)
-        echo "ROOTFS_FILE=$ROOTFS_FILE"
-        
-        # 下载文件和校验码
-        wget "${BASE_URL}/${ROOTFS_FILE}"
+        set -euo pipefail
+        BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"
+        echo "BASE_URL=${BASE_URL}"
         wget "${BASE_URL}/sha256sums"
-        
-        # 校验成功后，将其重命名为 rootfs.tar.gz
-        grep "$(basename "$ROOTFS_FILE")$" sha256sums > sha256sums.rootfs
+        ROOTFS_FILE=$(
+        grep -oE 'openwrt-.*rootfs\.tar\.gz' sha256sums \
+        | head -n1
+        )
+        echo "ROOTFS_FILE=${ROOTFS_FILE}"
+        test -n "$ROOTFS_FILE"
+        wget "${BASE_URL}/${ROOTFS_FILE}"
+        grep " ${ROOTFS_FILE}$" sha256sums > sha256sums.rootfs
         sha256sum -c sha256sums.rootfs
-        
-        mv "$ROOTFS_FILE" rootfs.tar.gz
+        mv "${ROOTFS_FILE}" rootfs.tar.gz
+        ls -lh
 
     - name: 生成 Dockerfile（增强版 OpenWrt Rootfs）
       run: |
