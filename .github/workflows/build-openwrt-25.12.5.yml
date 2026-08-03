@@ -81,7 +81,7 @@ jobs:
         platforms: linux/arm/v7
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7-25.12.5:latest
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v25.12.5
           ghcr.io/${{ github.repository_owner }}/openwrt-armv7-25.12.5:latest
 
     - name: 上传 Rootfs（供 Armbian 原生 Linux 使用）
