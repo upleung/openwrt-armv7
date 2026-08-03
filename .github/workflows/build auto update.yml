@@ -1,1 +1,98 @@
+name: Auto Build OpenWrt ARMv7 Repack
 
+on:
+  schedule:
+    - cron: '0 2 1 * *' # 每月 1 号凌晨 2 点 (UTC) 自动运行
+  workflow_dispatch: # 保留手动触发用于测试
+
+env:
+  TARGET: armsr
+  SUBTARGET: armv7
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: 初始化构建环境
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install -y wget ca-certificates curl
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+
+    - name: 获取 OpenWrt 最新版本号
+      id: get_version
+      run: |
+        # 从官方服务器抓取最新版本号 (排除 rc 候选版)
+        LATEST_VERSION=$(curl -s https://downloads.openwrt.org/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+        echo "检测到最新版本: ${LATEST_VERSION}"
+        # 写入环境变量供后续步骤使用
+        echo "VERSION=${LATEST_VERSION}" >> $GITHUB_ENV
+
+    - name: 下载官方 Rootfs + 校验
+      run: |
+        set -euo pipefail
+        BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"
+        echo "BASE_URL=${BASE_URL}"
+        
+        wget "${BASE_URL}/sha256sums"
+        
+        ROOTFS_FILE=$(grep -oE 'openwrt-.*rootfs\.tar\.gz' sha256sums | head -n1)
+        test -n "$ROOTFS_FILE"
+        
+        wget "${BASE_URL}/${ROOTFS_FILE}"
+        grep "${ROOTFS_FILE}" sha256sums > sha256sums.rootfs
+        sha256sum -c sha256sums.rootfs
+        mv "${ROOTFS_FILE}" rootfs.tar.gz
+
+    - name: 生成 Dockerfile
+      run: |
+        cat > Dockerfile <<'EOF'
+        FROM scratch
+        ADD rootfs.tar.gz /
+        EXPOSE 22 80 443
+        STOPSIGNAL SIGTERM
+        USER root
+        ENTRYPOINT ["/sbin/init"]
+        EOF
+
+    - name: 配置 QEMU 跨平台构建支持
+      uses: docker/setup-qemu-action@v3
+
+    - name: 配置 Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 登录 Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: 登录 GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 构建并推送 Docker 镜像
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/arm/v7
+        push: true
+        # 自动打上抓取到的具体版本号标签
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v${{ env.VERSION }}
+          ghcr.io/${{ github.repository_owner }}/openwrt-armv7:v${{ env.VERSION }}
