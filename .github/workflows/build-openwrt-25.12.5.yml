@@ -37,13 +37,16 @@ jobs:
         BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"
         echo "Base URL: ${BASE_URL}"
 
-        # 下载 rootfs.tar.gz 与 sha256sums
-        wget -q "${BASE_URL}/${ROOTFS_FILE}" -O rootfs.tar.gz
-        wget -q "${BASE_URL}/sha256sums" -O sha256sums
+        # 1. 保持官方原名下载，不要用 -O 重命名
+        wget -q "${BASE_URL}/${ROOTFS_FILE}"
+        wget -q "${BASE_URL}/sha256sums"
 
-        # 校验 rootfs.tar.gz 的 SHA256
+        # 2. 提取目标文件的校验值并执行校验（此时本地文件名与记录完全匹配）
         grep " ${ROOTFS_FILE}" sha256sums > sha256sums.rootfs
         sha256sum -c sha256sums.rootfs
+
+        # 3. 校验成功后，再将其重命名为 rootfs.tar.gz，以无缝对接你的 Dockerfile
+        mv "${ROOTFS_FILE}" rootfs.tar.gz
 
     - name: 生成 Dockerfile（原生 OpenWrt Rootfs）
       run: |
