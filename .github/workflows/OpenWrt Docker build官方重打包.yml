@@ -3,7 +3,7 @@ name: Auto Build OpenWrt ARMv7 Repack
 on:
   #schedule:
   #  - cron: '0 2 1 * *' # 每月 1 号凌晨 2 点 (UTC) 自动运行
-  # workflow_dispatch: # 保留手动触发用于测试
+  workflow_dispatch: # 保留手动触发用于测试
 
 env:
   TARGET: armsr
