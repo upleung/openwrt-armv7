@@ -107,14 +107,14 @@ jobs:
         context: .
         platforms: linux/arm/v7
         push: true
-        # 【修改】在这里加入两行 tag，分别对应 Docker Hub 和 GHCR
-        # 注意：此处假定 github.repository_owner 是全小写字母
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7-23.05.6:latest
-          ghcr.io/${{ github.repository_owner }}/openwrt-armv7-23.05.6:latest
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v23.05.6
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:latest
+          ghcr.io/${{ github.repository_owner }}/openwrt-armv7:v23.05.6
+          ghcr.io/${{ github.repository_owner }}/openwrt-armv7:latest
 
     - name: 上传 Rootfs 供原生 Linux 使用
       uses: actions/upload-artifact@v4
       with:
-        name: openwrt-armv7-luci-rootfs-23.05.6
+        name: openwrt-armv7-luci-rootfs
         path: rootfs.tar.gz
