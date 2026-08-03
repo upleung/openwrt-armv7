@@ -17,7 +17,7 @@ Sunshine!
 
 Original project: https://github.com/openwrt/openwrt | [Official Documentation](https://github.com/upleung/openwrt-armv7/blob/main/Official%20Documentation.md)
 
-This project: https://github.com/upleung/openwrt-armv7 | [DockerHub](https://hub.docker.com/repository/docker/mcgtekwrt/openwrt-armv7/)
+This project: https://github.com/upleung/openwrt-armv7 | [DockerHub](https://hub.docker.com/repository/docker/mcgtekwrt/openwrt-armv7/) | [Workflows Tutorial](https://github.com/upleung/openwrt-armv7/blob/main/.github/workflows/%E6%9E%84%E5%BB%BA%E7%BC%96%E8%AF%91%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.md)
 
 ---
 
