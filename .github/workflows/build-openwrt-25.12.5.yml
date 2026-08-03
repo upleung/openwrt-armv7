@@ -7,7 +7,6 @@ env:
   VERSION: 25.12.5
   TARGET: armsr
   SUBTARGET: armv7
-  ROOTFS_FILE: openwrt-25.12.5-armsr-armv7-rootfs.tar.gz
 
 jobs:
   build:
@@ -34,28 +33,37 @@ jobs:
 
     - name: 下载官方 OpenWrt ARMv7 Rootfs + 校验
       run: |
-        BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"
-        echo "Base URL: ${BASE_URL}"
-
-        # 1. 保持官方原名下载，不要用 -O 重命名
-        wget -q "${BASE_URL}/${ROOTFS_FILE}"
-        wget -q "${BASE_URL}/sha256sums"
-
-        # 2. 提取目标文件的校验值并执行校验（此时本地文件名与记录完全匹配）
-        grep " ${ROOTFS_FILE}" sha256sums > sha256sums.rootfs
+        set -euxo pipefail
+        
+        BASE_URL="[https://downloads.openwrt.org/releases/$](https://downloads.openwrt.org/releases/$){VERSION}/targets/${TARGET}/${SUBTARGET}"
+        echo "BASE_URL=$BASE_URL"
+        
+        # 自动发现最新 rootfs.tar.gz 文件名
+        ROOTFS_FILE=$(wget -qO- "${BASE_URL}/" | grep -oE 'openwrt-.*rootfs\.tar\.gz' | head -n1)
+        echo "ROOTFS_FILE=$ROOTFS_FILE"
+        
+        # 下载文件和校验码
+        wget "${BASE_URL}/${ROOTFS_FILE}"
+        wget "${BASE_URL}/sha256sums"
+        
+        # 校验成功后，将其重命名为 rootfs.tar.gz
+        grep "$(basename "$ROOTFS_FILE")$" sha256sums > sha256sums.rootfs
         sha256sum -c sha256sums.rootfs
+        
+        mv "$ROOTFS_FILE" rootfs.tar.gz
 
-        # 3. 校验成功后，再将其重命名为 rootfs.tar.gz，以无缝对接你的 Dockerfile
-        mv "${ROOTFS_FILE}" rootfs.tar.gz
-
-    - name: 生成 Dockerfile（原生 OpenWrt Rootfs）
+    - name: 生成 Dockerfile（增强版 OpenWrt Rootfs）
       run: |
         cat > Dockerfile <<'EOF'
         FROM scratch
         ADD rootfs.tar.gz /
+        
+        VOLUME ["/sys", "/proc", "/tmp"]
         EXPOSE 22 80 443
+        STOPSIGNAL SIGTERM
+        
         USER root
-        CMD ["/sbin/init"]
+        ENTRYPOINT ["/sbin/init"]
         EOF
 
     - name: 配置 QEMU 跨平台构建支持
@@ -86,7 +94,7 @@ jobs:
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v25.12.5
           ghcr.io/${{ github.repository_owner }}/openwrt-armv7:v25.12.5
-
+          
     - name: 上传 Rootfs（供 Armbian 原生 Linux 使用）
       uses: actions/upload-artifact@v4
       with:
