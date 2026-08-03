@@ -1,0 +1,108 @@
+name: Build OpenWrt ARMv7 with LuCI 25.12.5
+
+on:
+  workflow_dispatch:
+
+env:
+  VERSION: 25.12.5
+  TARGET: armsr
+  SUBTARGET: armv7
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repo (upleung/openwrt-armv7)
+      uses: actions/checkout@v4
+
+    - name: 初始化构建环境
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install -y wget ca-certificates
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+
+    - name: 下载官方 OpenWrt ARMv7 Rootfs + 校验
+      run: |
+        set -euo pipefail
+        BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"
+        echo "BASE_URL=${BASE_URL}"
+        
+        # 1. 下载哈希校验文件
+        wget "${BASE_URL}/sha256sums"
+        
+        # 2. 自动提取所需的 Rootfs 文件名
+        ROOTFS_FILE=$(
+        grep -oE 'openwrt-.*rootfs\.tar\.gz' sha256sums \
+        | head -n1
+        )
+        echo "ROOTFS_FILE=${ROOTFS_FILE}"
+        test -n "$ROOTFS_FILE"
+        
+        # 3. 下载该固件文件
+        wget "${BASE_URL}/${ROOTFS_FILE}"
+        
+        # 4. 放宽 grep 匹配规则（去除严格的空格和结尾限制），避免格式差异导致匹配失败退出
+        grep "${ROOTFS_FILE}" sha256sums > sha256sums.rootfs
+        
+        # 5. 执行哈希校验
+        sha256sum -c sha256sums.rootfs
+        
+        # 6. 校验通过后重命名，对接 Dockerfile
+        mv "${ROOTFS_FILE}" rootfs.tar.gz
+        ls -lh
+
+    - name: 生成 Dockerfile（增强版 OpenWrt Rootfs）
+      run: |
+        cat > Dockerfile <<'EOF'
+        FROM scratch
+        ADD rootfs.tar.gz /
+        EXPOSE 22 80 443
+        STOPSIGNAL SIGTERM
+        USER root
+        ENTRYPOINT ["/sbin/init"]
+        EOF
+
+    - name: 配置 QEMU 跨平台构建支持
+      uses: docker/setup-qemu-action@v3
+
+    - name: 配置 Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 登录 Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: 登录 GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 构建并推送 Docker 镜像 (linux/arm/v7)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/arm/v7
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v25.12.5
+          ghcr.io/${{ github.repository_owner }}/openwrt-armv7:v25.12.5
+          
+    - name: 上传 Rootfs（供 Armbian 原生 Linux 使用）
+      uses: actions/upload-artifact@v4
+      with:
+        name: openwrt-armv7-luci-rootfs-25.12.5
+        path: rootfs.tar.gz
