@@ -54,11 +54,8 @@ jobs:
         cat > Dockerfile <<'EOF'
         FROM scratch
         ADD rootfs.tar.gz /
-        
-        VOLUME ["/sys", "/proc", "/tmp"]
         EXPOSE 22 80 443
         STOPSIGNAL SIGTERM
-        
         USER root
         ENTRYPOINT ["/sbin/init"]
         EOF
