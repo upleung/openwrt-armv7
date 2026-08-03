@@ -34,14 +34,6 @@ docker network create -d macvlan \
   -o parent=eth0 openwrt_macvlan
 ```
 
-### Docker run
-
-```bash
-docker network create -d macvlan \
-  --subnet=192.168.1.0/24 \
-  --gateway=192.168.1.1 \
-  -o parent=eth0 openwrt_macvlan
-```
 
 ### Docker run
 
