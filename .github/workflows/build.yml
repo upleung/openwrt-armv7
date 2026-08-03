@@ -1,11 +1,11 @@
-name: Build OpenWrt ARMv7 with LuCI
+name: Build OpenWrt ARMv7 with LuCI 23.05.6
 
 on:
   workflow_dispatch: # 仅保留手动触发
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: openwrt-24.10 # 指定24.10稳定版分支
+  REPO_BRANCH: v23.05.6 # 指定23.05.6稳定版
 
 jobs:
   build:
@@ -69,14 +69,14 @@ jobs:
 
     - name: 准备 Docker 镜像上下文
       run: |
-        cd openwrt/bin/targets/armsr/armv7
-        tarball=$(ls *rootfs*.tar.gz | head -n 1)
-        cp $tarball ../../../../../rootfs.tar.gz
-        cd ../../../../../
-        cat >> Dockerfile <<EOF
+        set -euo pipefail
+        # 不再硬编码 armvirt/32，自动找真正生成的 rootfs.tar.gz
+        ROOTFS="$(find openwrt/bin/targets -type f -name '*rootfs.tar.gz' | sort | head -n 1)"
+        test -n "$ROOTFS"
+        cp "$ROOTFS" ./rootfs.tar.gz
+        cat > Dockerfile <<'EOF'
         FROM scratch
         ADD rootfs.tar.gz /
-        EXPOSE 22 80 443
         USER root
         CMD ["/sbin/init"]
         EOF
