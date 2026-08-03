@@ -111,8 +111,8 @@ jobs:
         # 【修改】在这里加入两行 tag，分别对应 Docker Hub 和 GHCR
         # 注意：此处假定 github.repository_owner 是全小写字母
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7-22.03.7:latest
-          ghcr.io/${{ github.repository_owner }}/openwrt-armv7-22.03.7:latest
+          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v22.03.7
+          ghcr.io/${{ github.repository_owner }}/openwrt-armv7:v22.03.7
 
     - name: 上传 Rootfs 供原生 Linux 使用
       uses: actions/upload-artifact@v4
