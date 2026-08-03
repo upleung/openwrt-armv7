@@ -36,16 +36,28 @@ jobs:
         set -euo pipefail
         BASE_URL="https://downloads.openwrt.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}"
         echo "BASE_URL=${BASE_URL}"
+        
+        # 1. 下载哈希校验文件
         wget "${BASE_URL}/sha256sums"
+        
+        # 2. 自动提取所需的 Rootfs 文件名
         ROOTFS_FILE=$(
         grep -oE 'openwrt-.*rootfs\.tar\.gz' sha256sums \
         | head -n1
         )
         echo "ROOTFS_FILE=${ROOTFS_FILE}"
         test -n "$ROOTFS_FILE"
+        
+        # 3. 下载该固件文件
         wget "${BASE_URL}/${ROOTFS_FILE}"
-        grep " ${ROOTFS_FILE}$" sha256sums > sha256sums.rootfs
+        
+        # 4. 放宽 grep 匹配规则（去除严格的空格和结尾限制），避免格式差异导致匹配失败退出
+        grep "${ROOTFS_FILE}" sha256sums > sha256sums.rootfs
+        
+        # 5. 执行哈希校验
         sha256sum -c sha256sums.rootfs
+        
+        # 6. 校验通过后重命名，对接 Dockerfile
         mv "${ROOTFS_FILE}" rootfs.tar.gz
         ls -lh
 
