@@ -121,7 +121,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: 登录 GitHub Container Registry (GHCR)
-      # 【新增】你提供的 GHCR 登录代码
+      # 【新增】你提供的 GHCR 登录
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
@@ -136,9 +136,9 @@ jobs:
         push: true
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:v23.05.6
-          ${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:latest
+          #${{ secrets.DOCKER_USERNAME }}/openwrt-armv7:latest
           ghcr.io/${{ github.repository_owner }}/openwrt-armv7:v23.05.6
-          ghcr.io/${{ github.repository_owner }}/openwrt-armv7:latest
+          #ghcr.io/${{ github.repository_owner }}/openwrt-armv7:latest
 
     - name: 上传 Rootfs 供原生 Linux 使用
       uses: actions/upload-artifact@v4
